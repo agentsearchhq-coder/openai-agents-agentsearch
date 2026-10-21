@@ -4,7 +4,7 @@ Function tools for the [OpenAI Agents SDK](https://openai.github.io/openai-agent
 
 | Tool | Cost |
 |---|---|
-| `agentsearch_search` | **Free** by default (up to 25 searches/day per IP, up to 5 results, no key). Paid and unlimited only when you opt in (`AGENTSEARCH_MODE=paid` or `mode="paid"`). |
+| `agentsearch_search` | **Free** by default (up to 25 searches/day per IP, up to 5 results, no key). Paid and unlimited only when you opt in (`AGENTSEARCH_MODE=paid` or `search_mode="paid"`). |
 | `agentsearch_extract` | $0.005/call (USDC on Base via x402) |
 | `agentsearch_render` | $0.005/call (headless browser for JS pages) |
 
@@ -31,26 +31,32 @@ print(result.final_output)
 
 ## Search modes
 
-`agentsearch_search(query, max_results=None, mode=None)`:
+The model only sees `agentsearch_search(query, max_results=None)`; it can never choose paid search. The search mode is a developer setting:
+
+```python
+from openai_agents_agentsearch import agentsearch_tools, make_agentsearch_search
+
+tools = agentsearch_tools(search_mode="paid")   # or make_agentsearch_search("paid")
+```
 
 - `free` (default): the free relay.
-- `paid`: unlimited paid search ($0.005/call). Falls back to free with a warning if the `[paid]` extra or wallet key is missing.
+- `paid`: unlimited paid search ($0.005/call). Falls back to free with a logged warning if the `[paid]` extra or wallet key is missing.
 - `auto`: paid if the `[paid]` extra is installed and a wallet key is set, otherwise free.
 
-`AGENTSEARCH_MODE` takes precedence over the `mode` argument, so you can pin search to `free` regardless of what the model passes.
+`AGENTSEARCH_MODE` (`free`/`paid`/`auto`) takes precedence over the developer setting.
 
 `agentsearch_extract` accepts `formats` (`markdown`, `text`, `html`, `links`); `agentsearch_render` also accepts `formats` and `wait_for_selector`.
 
 ## Paid mode
 
-Install the `paid` extra (`pip install "openai-agents-agentsearch[paid]"`) and set `AGENTSEARCH_WALLET_PRIVATE_KEY` to the private key of a **new wallet made only for this**, funded with a little USDC on Base (e.g. $1; no ETH needed). Each call costs $0.005 and is paid over x402 through the Pocket Network Agentic Portal using the official x402 Python SDK. Extract and render use the key directly. Search stays free unless you opt in to paid search with `AGENTSEARCH_MODE=paid` (or the tool's `mode="paid"` argument); a key alone does not switch it. If paid is chosen but the `[paid]` extra or the key is missing, search falls back to free with a logged warning.
+Install the `paid` extra (`pip install "openai-agents-agentsearch[paid]"`) and set `AGENTSEARCH_WALLET_PRIVATE_KEY` to the private key of a **new wallet made only for this**, funded with a little USDC on Base (e.g. $1; no ETH needed). Each call costs $0.005 and is paid over x402 through the Pocket Network Agentic Portal using the official x402 Python SDK. Extract and render use the key directly. Search stays free unless you opt in to paid search with `AGENTSEARCH_MODE=paid` (or `agentsearch_tools(search_mode="paid")`); a key alone does not switch it. If paid is chosen but the `[paid]` extra or the key is missing, search falls back to free with a logged warning.
 
 | Env var | Default |
 |---|---|
 | `AGENTSEARCH_MAX_TOTAL_ATOMIC` | `1000000` ($1.00 per process) |
 | `AGENTSEARCH_MAX_PER_CALL_ATOMIC` | `5000` ($0.005; can only be lowered) |
 | `AGENTSEARCH_TIMEOUT_MS` | `30000` |
-| `AGENTSEARCH_MODE` | unset (`free`, `paid` or `auto`; overrides the tool's `mode` argument) |
+| `AGENTSEARCH_MODE` | unset (`free`, `paid` or `auto`; overrides `search_mode`) |
 
 Limits are checked before anything is signed. The key is not included in tool output or error messages. Paid results include a `payment` object.
 

@@ -53,7 +53,7 @@ def test_live_free_search():
 
 
 # ---- 0.2.1 ----
-from openai_agents_agentsearch import _ops, agentsearch_extract, agentsearch_render
+from openai_agents_agentsearch import _ops, agentsearch_extract, agentsearch_render, make_agentsearch_search
 
 
 def _no_mode(monkeypatch):
@@ -105,7 +105,7 @@ def test_paid_without_extra_falls_back(monkeypatch, caplog):
     monkeypatch.setattr(_client, "paid_extra_installed", lambda: False)
     portal = _spy_portal(monkeypatch)
     with caplog.at_level("WARNING"):
-        out = call(agentsearch_search, {"query": "hi", "mode": "paid"})
+        out = call(make_agentsearch_search("paid"), {"query": "hi"})
     assert not out.startswith("Error") and not portal and seen
     assert "[paid] extra" in caplog.text and "0x111" not in caplog.text
     assert _ops.resolve_search_mode("auto") == "free"
@@ -134,3 +134,18 @@ def test_extract_render_new_params(monkeypatch):
     assert portal[-1] == ("render", {"url": "https://a", "formats": ["html", "links"], "wait_for_selector": "#app"})
     assert "wait_for_selector" in agentsearch_render.params_json_schema["properties"]
     assert "formats" in agentsearch_extract.params_json_schema["properties"]
+
+
+def test_mode_not_model_visible(monkeypatch):
+    mock(monkeypatch, _client, 200, {})
+    for t in (agentsearch_search, make_agentsearch_search("paid"), agentsearch_tools(search_mode="paid")[0]):
+        assert t.name == "agentsearch_search"
+        assert set(t.params_json_schema["properties"]) == {"query", "max_results"}
+    monkeypatch.setenv("AGENTSEARCH_WALLET_PRIVATE_KEY", "0x" + "1" * 64)
+    monkeypatch.setattr(_client, "paid_extra_installed", lambda: True)
+    _no_mode(monkeypatch)
+    portal = _spy_portal(monkeypatch)
+    call(agentsearch_tools(search_mode="paid")[0], {"query": "hi"})
+    assert portal and portal[0][0] == "search"
+    with pytest.raises(ValueError):
+        make_agentsearch_search("bogus")

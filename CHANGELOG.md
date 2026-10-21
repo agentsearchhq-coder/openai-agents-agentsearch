@@ -5,7 +5,7 @@
 ### Changed: paid search is now explicit opt-in (safety)
 
 - `agentsearch_search` defaults to free search. Having `AGENTSEARCH_WALLET_PRIVATE_KEY` or `POCKET_PRIVATE_KEY` set no longer switches search to paid.
-- New `mode` argument (`"free"` | `"paid"` | `"auto"`) and `AGENTSEARCH_MODE` env override (takes precedence over the argument).
+- Search mode (`"free"` | `"paid"` | `"auto"`) is a developer setting only: `agentsearch_tools(search_mode=...)` or `make_agentsearch_search(mode)`, plus the `AGENTSEARCH_MODE` env override (takes precedence). It is not in the tool schema, so the model can never choose paid search.
 - If you relied on 0.2.0 auto-switching to paid when a key was set, set `AGENTSEARCH_MODE=paid`.
 - Extract and render are unchanged: they are paid tools and still need the wallet key.
 

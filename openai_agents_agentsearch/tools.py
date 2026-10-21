@@ -7,18 +7,30 @@ from agents import FunctionTool, function_tool
 from . import _ops
 
 
-@function_tool
-def agentsearch_search(query: str, max_results: Optional[int] = None,
-                       mode: Optional[Literal["free", "paid", "auto"]] = None) -> str:
-    """Live web search. Returns JSON with up to 5 ranked results (title, url, content).
-    Free by default (up to 25 searches/day per IP, no key needed).
+def make_agentsearch_search(mode: Optional[Literal["free", "paid", "auto"]] = None) -> FunctionTool:
+    """Build an agentsearch_search tool pinned to a developer-chosen search mode.
 
-    Args:
-        query: the search query.
-        max_results: 1-5, default 5.
-        mode: "free" (default), "paid" or "auto". Leave unset unless told otherwise.
+    The mode is a developer setting and is not part of the tool schema the model sees.
+    AGENTSEARCH_MODE in the environment still takes precedence. Default: free.
     """
-    return _ops.search(query, max_results, mode)
+    if mode is not None and mode not in ("free", "paid", "auto"):
+        raise ValueError(f"mode must be 'free', 'paid' or 'auto' (got {mode!r})")
+
+    @function_tool(name_override="agentsearch_search")
+    def agentsearch_search(query: str, max_results: Optional[int] = None) -> str:
+        """Live web search. Returns JSON with up to 5 ranked results (title, url, content).
+        Free by default (up to 25 searches/day per IP, no key needed).
+
+        Args:
+            query: the search query.
+            max_results: 1-5, default 5.
+        """
+        return _ops.search(query, max_results, mode)
+
+    return agentsearch_search
+
+
+agentsearch_search = make_agentsearch_search()
 
 
 @function_tool
@@ -57,6 +69,11 @@ def agentsearch_render(url: str, max_chars: Optional[int] = None,
                      wait_until=wait_until, wait_for_selector=wait_for_selector)
 
 
-def agentsearch_tools(include_paid: bool = True) -> List[FunctionTool]:
-    """All AgentSearch tools. Pass include_paid=False for free search only."""
-    return [agentsearch_search, agentsearch_extract, agentsearch_render] if include_paid else [agentsearch_search]
+def agentsearch_tools(include_paid: bool = True,
+                      search_mode: Optional[Literal["free", "paid", "auto"]] = None) -> List[FunctionTool]:
+    """All AgentSearch tools. Pass include_paid=False for free search only.
+
+    search_mode is a developer setting for search ("free" default, "paid" or "auto"); the model never sees it.
+    """
+    search = agentsearch_search if search_mode is None else make_agentsearch_search(search_mode)
+    return [search, agentsearch_extract, agentsearch_render] if include_paid else [search]
