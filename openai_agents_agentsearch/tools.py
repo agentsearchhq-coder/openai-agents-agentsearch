@@ -69,6 +69,22 @@ def agentsearch_render(url: str, max_chars: Optional[int] = None,
                      wait_until=wait_until, wait_for_selector=wait_for_selector)
 
 
+@function_tool
+def agentsearch_search_and_read(query: str, num_results: Optional[int] = None, max_chars: Optional[int] = None,
+                                render_fallback: Optional[bool] = None) -> str:
+    """Search the live web and return the top results with each page's main text in one paid call on AgentSearch's direct x402 API (charged only when at least one page returns text).
+    Cheaper than a separate search plus three extracts, and one payment instead of four. Default 3 results (max 5), default 8000 characters per page (max 20000).
+    Pass render_fallback=true to render at most one thin page in the same call. Direct x402 only — not available on Pocket. Search itself stays free by default. Paid tool (needs a wallet).
+
+    Args:
+        query: the search query.
+        num_results: how many top results to read, 1-5, default 3.
+        max_chars: max characters of page text per result, default 8000, max 20000.
+        render_fallback: if extract is thin, render at most one page in the same $0.015 call.
+    """
+    return _ops.search_and_read(query, num_results=num_results, max_chars=max_chars, render_fallback=render_fallback)
+
+
 def agentsearch_tools(include_paid: bool = True,
                       search_mode: Optional[Literal["free", "paid", "auto"]] = None) -> List[FunctionTool]:
     """All AgentSearch tools. Pass include_paid=False for free search only.
@@ -76,4 +92,4 @@ def agentsearch_tools(include_paid: bool = True,
     search_mode is a developer setting for search ("free" default, "paid" or "auto"); the model never sees it.
     """
     search = agentsearch_search if search_mode is None else make_agentsearch_search(search_mode)
-    return [search, agentsearch_extract, agentsearch_render] if include_paid else [search]
+    return [search, agentsearch_extract, agentsearch_render, agentsearch_search_and_read] if include_paid else [search]

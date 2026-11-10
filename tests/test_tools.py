@@ -30,7 +30,7 @@ def call(tool, args):
 
 
 def test_tools_list():
-    assert [t.name for t in agentsearch_tools()] == ["agentsearch_search", "agentsearch_extract", "agentsearch_render"]
+    assert [t.name for t in agentsearch_tools()] == ["agentsearch_search", "agentsearch_extract", "agentsearch_render", "agentsearch_search_and_read"]
     assert "query" in agentsearch_search.params_json_schema["properties"]
 
 
