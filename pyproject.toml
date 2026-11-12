@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "openai-agents-agentsearch"
-version = "0.4.0"
-description = "OpenAI Agents SDK function tools for AgentSearch: free live web search, plus pay-per-call extract and JS render"
+version = "0.5.0"
+description = "OpenAI Agents SDK function tools for AgentSearch: free live web search, plus pay-per-call news, extract, JS render, screenshots and search-and-read"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"

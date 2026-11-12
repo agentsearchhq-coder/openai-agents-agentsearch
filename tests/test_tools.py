@@ -30,7 +30,8 @@ def call(tool, args):
 
 
 def test_tools_list():
-    assert [t.name for t in agentsearch_tools()] == ["agentsearch_search", "agentsearch_extract", "agentsearch_render", "agentsearch_search_and_read"]
+    assert [t.name for t in agentsearch_tools()] == ["agentsearch_search", "agentsearch_news_search", "agentsearch_extract",
+                                                     "agentsearch_render", "agentsearch_screenshot", "agentsearch_search_and_read"]
     assert "query" in agentsearch_search.params_json_schema["properties"]
 
 
@@ -42,7 +43,7 @@ def test_free_search(monkeypatch):
 
 def test_paid_without_wallet(monkeypatch):
     seen = mock(monkeypatch, _client, 200, {})
-    assert "no call was made" in call(agentsearch_tools()[1], {"url": "https://example.com", "max_chars": None}) and not seen
+    assert "no call was made" in call(agentsearch_tools()[2], {"url": "https://example.com", "max_chars": None}) and not seen
 
 
 @pytest.mark.skipif(not os.environ.get("AGENTSEARCH_LIVE"), reason="set AGENTSEARCH_LIVE=1")
@@ -140,7 +141,8 @@ def test_mode_not_model_visible(monkeypatch):
     mock(monkeypatch, _client, 200, {})
     for t in (agentsearch_search, make_agentsearch_search("paid"), agentsearch_tools(search_mode="paid")[0]):
         assert t.name == "agentsearch_search"
-        assert set(t.params_json_schema["properties"]) == {"query", "max_results"}
+        assert set(t.params_json_schema["properties"]) == {"query", "max_results", "freshness", "date_from", "date_to", "country",
+                                                           "language", "include_domains", "exclude_domains"}
     monkeypatch.setenv("AGENTSEARCH_WALLET_PRIVATE_KEY", "0x" + "1" * 64)
     monkeypatch.setattr(_client, "paid_extra_installed", lambda: True)
     _no_mode(monkeypatch)
