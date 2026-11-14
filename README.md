@@ -71,7 +71,7 @@ Limits are checked before anything is signed. The key is not included in tool ou
 
 ## Errors
 
-Tools return `"Error: ..."` strings instead of raising. A 429 from the free relay means the daily limit (up to 25 searches/day per IP) was hit, and the message explains how to upgrade.
+Tools return `"Error: ..."` strings instead of raising. A 429 from the free relay means the daily limit (up to 25 searches/day per IP) was hit, and the message explains how to upgrade. Search, news and search-and-read reject queries shorter than 2 characters (after trimming) before any request, so nothing is sent or charged; other 4xx errors from the free relay say to fix the input instead of retrying it unchanged.
 
 ## Development
 
