@@ -97,7 +97,7 @@ def agentsearch_search_and_read(query: str, num_results: Optional[int] = None, m
         query: the search query.
         num_results: how many top results to read, 1-5, default 3.
         max_chars: max characters of page text per result, default 8000, max 20000.
-        render_fallback: if extract is thin, render at most one page in the same $0.009 call.
+        render_fallback: if extract is thin, render at most one page in the same $0.005 call.
         freshness: only results from the past day, week, month or year.
         date_from: earliest publish date YYYY-MM-DD.
         date_to: latest publish date YYYY-MM-DD.
