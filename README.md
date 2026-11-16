@@ -5,10 +5,10 @@ Function tools for the [OpenAI Agents SDK](https://openai.github.io/openai-agent
 | Tool | Cost |
 |---|---|
 | `agentsearch_search` | **Free** by default (up to 25 searches/day per IP, up to 5 results, no key). Paid and unlimited only when you opt in (`AGENTSEARCH_MODE=paid` or `search_mode="paid"`). |
-| `agentsearch_news_search` | $0.005/call (recent news with publish dates; no results, no charge) |
+| `agentsearch_news_search` | $0.003/call (recent news with publish dates; no results, no charge) |
 | `agentsearch_extract` | $0.002/call (USDC on Base via x402 to AgentSearch) |
 | `agentsearch_render` | $0.005/call (headless browser for JS pages) |
-| `agentsearch_screenshot` | $0.005/call (PNG/JPEG saved to a local file; path returned) |
+| `agentsearch_screenshot` | $0.004/call (PNG/JPEG saved to a local file; path returned) |
 | `agentsearch_search_and_read` | $0.005/call (search plus the top pages' text in one payment) |
 
 ## Install
