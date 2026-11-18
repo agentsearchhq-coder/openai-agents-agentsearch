@@ -44,8 +44,7 @@ def _filters(kw: dict[str, Any]) -> dict[str, Any]:
 def search(query: str, max_results: Optional[int] = None, mode: Optional[str] = None, **filters: Any) -> str:
     try:
         query = c.check_query(query)
-        if max_results is not None:
-            max_results = max(1, min(int(max_results), 5))
+        max_results = c.coerce_max_results(max_results, 1, 5)
         if resolve_search_mode(mode) == "paid":
             body: dict[str, Any] = {"query": query, **_filters(filters)}
             if max_results:
@@ -95,8 +94,9 @@ def news(query: str, max_results: Optional[int] = None, **filters: Any) -> str:
         if not c.has_wallet_key():
             raise c.AgentSearchError(c.paid_only_message("agentsearch_news_search"))
         body: dict[str, Any] = {"query": query, **_filters(filters)}
+        max_results = c.coerce_max_results(max_results, 1, 10)
         if max_results is not None:
-            body["max_results"] = max(1, min(int(max_results), 10))
+            body["max_results"] = max_results
         return c.dumps(c.call_portal("news", body))
     except Exception as e:
         return f"Error: {e}"

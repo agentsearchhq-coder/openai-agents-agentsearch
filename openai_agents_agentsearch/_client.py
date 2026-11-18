@@ -10,6 +10,7 @@ import logging
 import os
 import re
 import threading
+from collections.abc import Mapping
 from typing import Any, Optional
 
 import httpx
@@ -85,9 +86,52 @@ class AgentSearchError(Exception):
 MIN_QUERY_CHARS = 2
 
 
+_QUERY_KEYS = ("query", "q", "input", "search_query", "text", "value")
+_COUNT_KEYS = ("max_results", "num_results", "k", "limit", "count", "value")
+
+
+def _unwrap(v: Any, keys: tuple) -> Any:
+    """Unwrap a tool-input dict ({"query": "x", "max_results": 3}) passed where a scalar was expected.
+    Returns the first matching key's value (recursively), or None when the dict has none of the keys
+    (for example a LangChain RunnableConfig passed as a 2nd positional argument)."""
+    for _ in range(4):
+        if isinstance(v, (list, tuple)):
+            v = next((x for x in v if isinstance(x, (str, int, float, dict)) and not isinstance(x, bool)), None)
+            continue
+        if isinstance(v, Mapping):
+            for k in keys:
+                if v.get(k) is not None:
+                    v = v[k]
+                    break
+            else:
+                return None
+            continue
+        return v
+    return None if isinstance(v, (Mapping, list, tuple)) else v
+
+
+def coerce_max_results(value: Any, lo: int = 1, hi: int = 5) -> Optional[int]:
+    """Never raises. None for anything unusable (the server default), otherwise an int clamped to lo..hi.
+    Accepts ints, floats, numeric strings and tool-input dicts such as {"max_results": 3}."""
+    v = _unwrap(value, _COUNT_KEYS)
+    if v is None or isinstance(v, bool) or isinstance(v, (Mapping, list, tuple)):
+        return None
+    try:
+        n = int(float(v.strip())) if isinstance(v, str) else int(v)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return max(lo, min(hi, n))
+
+
 def check_query(query: Any) -> str:
-    """Trim a search query and reject empty or too-short ones before any network request (nothing is sent or charged)."""
-    q = str(query).strip() if query is not None else ""
+    """Coerce to a trimmed, non-empty search string or raise AgentSearchError before any network request
+    (nothing is sent or charged). Unwraps tool-input dicts like {"query": "x"}; ints/floats are stringified."""
+    v = _unwrap(query, _QUERY_KEYS)
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        v = str(v)
+    if not isinstance(v, str):
+        raise AgentSearchError('query must not be empty: pass a non-empty search string, e.g. {"query": "latest release notes"}. Nothing was sent or charged.')
+    q = v.strip()
     if not q:
         raise AgentSearchError("query must not be empty: pass a non-empty search string. Nothing was sent or charged.")
     if len(q) < MIN_QUERY_CHARS:
@@ -153,7 +197,11 @@ def _strip_provider(d: Any) -> Any:
 
 
 def free_search(query: str, max_results: Optional[int] = None, client: Optional[httpx.Client] = None) -> Any:
-    body: dict[str, Any] = {"query": query}
+    """Free relay search. Also safe to hand to a framework as a plain function: ``query`` may be a tool-input
+    dict, ``max_results`` may be an int, numeric string, tool-input dict, or an unrelated dict such as a
+    config object (ignored). A missing/empty query raises AgentSearchError before any request."""
+    body: dict[str, Any] = {"query": check_query(query)}
+    max_results = coerce_max_results(max_results)
     if max_results is not None:
         body["max_results"] = max_results
     c = client or httpx.Client(timeout=timeout_s())

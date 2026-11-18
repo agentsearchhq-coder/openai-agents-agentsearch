@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.4 (2026-11-18)
+- Fix HTTP 400s from the free relay. `free_search()` (also what you get when you pass it to a framework as a plain function) now unwraps a whole tool-input dict passed as `query`, ignores a non-count dict in the `max_results` slot (such as a framework config object passed as the 2nd argument), accepts a numeric string or `{"max_results": n}` for the count and clamps it to 1-5. An empty, missing or non-string query raises `AgentSearchError` before any request (nothing sent or charged). `check_query` unwraps tool-input dicts and no longer stringifies arbitrary objects. The `search` and `news` tools use the same lenient count coercion (clamped, never an error).
+
 ## 0.5.3 (2026-11-16)
 - Docs only: README tool table: news $0.003/call and screenshot $0.004/call (were still $0.005). Live direct prices: search and news $0.003, extract $0.002, render $0.005, screenshot $0.004, search_and_read $0.005; Pocket route unchanged at $0.005. No code or behavior change.
 
