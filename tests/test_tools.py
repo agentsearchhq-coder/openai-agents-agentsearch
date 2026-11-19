@@ -67,20 +67,29 @@ def _spy_portal(monkeypatch):
     return calls
 
 
-def test_key_alone_does_not_force_paid(monkeypatch):
+def test_key_makes_search_paid_by_default(monkeypatch):
+    """0.6.0: with a wallet, search pays by default; AGENTSEARCH_MODE=free keeps it free."""
     seen = mock(monkeypatch, _client, 200, {"results": []})
     _no_mode(monkeypatch)
     monkeypatch.setenv("AGENTSEARCH_WALLET_PRIVATE_KEY", "0x" + "1" * 64)
     monkeypatch.setattr(_client, "paid_extra_installed", lambda: True)
     portal = _spy_portal(monkeypatch)
-    json.loads(call(agentsearch_search, {"query": "hi"}))
-    assert not portal and len(seen) == 1 and "relay" in str(seen[0].url)
+    out = json.loads(call(agentsearch_search, {"query": "hi"}))
+    assert portal and portal[0][0] == "search" and not seen
+    assert out["agentsearch_mode"].startswith("paid: ")
+    monkeypatch.setenv("AGENTSEARCH_MODE", "free")
+    out = json.loads(call(agentsearch_search, {"query": "hi"}))
+    assert len(portal) == 1 and len(seen) == 1 and "relay" in str(seen[0].url)
+    assert out["agentsearch_mode"].startswith("free: ")
 
 
-def test_pocket_key_alone_does_not_force_paid(monkeypatch):
+def test_pocket_key_makes_search_paid_but_not_without_extra(monkeypatch):
     mock(monkeypatch, _client, 200, {"results": []})
     _no_mode(monkeypatch)
     monkeypatch.setenv("POCKET_PRIVATE_KEY", "0x" + "1" * 64)
+    monkeypatch.setattr(_client, "paid_extra_installed", lambda: True)
+    assert _ops.resolve_search_mode(None) == "paid"
+    monkeypatch.setattr(_client, "paid_extra_installed", lambda: False)
     assert _ops.resolve_search_mode(None) == "free"
 
 

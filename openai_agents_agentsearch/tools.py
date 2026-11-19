@@ -22,7 +22,7 @@ def make_agentsearch_search(mode: Optional[Literal["free", "paid", "auto"]] = No
         language: Optional[str] = None, include_domains: Optional[List[str]] = None,
         exclude_domains: Optional[List[str]] = None) -> str:
         """Live web search. Returns JSON with up to 5 ranked results (title, url, content).
-        Free by default (up to 25 searches/day per IP, no key needed). Paid search also honors the filters below;
+        Free without a wallet (up to 25 searches/day per IP, no key needed); it pays per call when a wallet is configured. Paid search also honors the filters below;
         free search ignores them. For recent news use agentsearch_news_search.
 
         Args:
@@ -91,7 +91,7 @@ def agentsearch_search_and_read(query: str, num_results: Optional[int] = None, m
         exclude_domains: Optional[List[str]] = None) -> str:
     """Search the live web and return the top results with each page's main text in one paid call on AgentSearch's direct x402 API (charged only when at least one page returns text).
     Cheaper than a separate search plus three extracts, and one payment instead of four. Default 3 results (max 5), default 8000 characters per page (max 20000).
-    Pass render_fallback=true to render at most one thin page in the same call. Direct x402 only — not available on Pocket. Search itself stays free by default. Paid tool (needs a wallet).
+    Pass render_fallback=true to render at most one thin page in the same call. Direct x402 only — not available on Pocket. Plain search is free without a wallet. Paid tool (needs a wallet).
 
     Args:
         query: the search query.
