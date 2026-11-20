@@ -160,3 +160,11 @@ def test_mode_not_model_visible(monkeypatch):
     assert portal and portal[0][0] == "search"
     with pytest.raises(ValueError):
         make_agentsearch_search("bogus")
+
+
+def test_free_limit_message_lifetime_wording():
+    # 2026-11-19: free search is 25 searches per IP in total (lifetime), then pay per call; no daily reset.
+    msg = _client.FREE_LIMIT_MESSAGE
+    assert "25 free searches per IP in total, then pay per call" in msg
+    assert "searches/day" not in msg and "resets daily" not in msg
+    assert "per IP in total" in _client.search_mode_label("free")

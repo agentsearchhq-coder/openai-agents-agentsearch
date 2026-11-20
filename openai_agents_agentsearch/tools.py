@@ -22,7 +22,7 @@ def make_agentsearch_search(mode: Optional[Literal["free", "paid", "auto"]] = No
         language: Optional[str] = None, include_domains: Optional[List[str]] = None,
         exclude_domains: Optional[List[str]] = None) -> str:
         """Live web search. Returns JSON with up to 5 ranked results (title, url, content).
-        Free without a wallet (up to 25 searches/day per IP, no key needed); it pays per call when a wallet is configured. Paid search also honors the filters below;
+        Free without a wallet (25 free searches per IP in total, then pay per call, no key needed); it pays per call when a wallet is configured. Paid search also honors the filters below;
         free search ignores them. For recent news use agentsearch_news_search.
 
         Args:

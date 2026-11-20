@@ -4,7 +4,7 @@ Function tools for the [OpenAI Agents SDK](https://openai.github.io/openai-agent
 
 | Tool | Cost |
 |---|---|
-| `agentsearch_search` | **Free** with no wallet (up to 25 searches/day per IP, up to 5 results, no key). With a wallet and the `[paid]` extra, $0.003/call and unlimited (from 0.6.0; `AGENTSEARCH_MODE=free` or `search_mode="free"` keeps it free). |
+| `agentsearch_search` | **Free** with no wallet (25 free searches per IP in total, then pay per call, up to 5 results, no key). With a wallet and the `[paid]` extra, $0.003/call and unlimited (from 0.6.0; `AGENTSEARCH_MODE=free` or `search_mode="free"` keeps it free). |
 | `agentsearch_news_search` | $0.003/call (recent news with publish dates; no results, no charge) |
 | `agentsearch_extract` | $0.002/call (USDC on Base via x402 to AgentSearch) |
 | `agentsearch_render` | $0.005/call (headless browser for JS pages) |
@@ -76,7 +76,7 @@ Limits are checked before anything is signed. The key is not included in tool ou
 
 ## Errors
 
-Tools return `"Error: ..."` strings instead of raising. A 429 from the free relay means the daily limit (up to 25 searches/day per IP) was hit, and the message explains how to upgrade. Search, news and search-and-read reject queries shorter than 2 characters (after trimming) before any request, so nothing is sent or charged; other 4xx errors from the free relay say to fix the input instead of retrying it unchanged.
+Tools return `"Error: ..."` strings instead of raising. A 429 from the free relay means the free search allowance (25 free searches per IP in total, then pay per call) is used up or shared daily capacity is reached, and the message explains how to upgrade. Search, news and search-and-read reject queries shorter than 2 characters (after trimming) before any request, so nothing is sent or charged; other 4xx errors from the free relay say to fix the input instead of retrying it unchanged.
 
 ## Development
 
