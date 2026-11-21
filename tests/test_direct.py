@@ -207,6 +207,7 @@ def test_filters_dropped_on_pocket(monkeypatch):
 
 def test_screenshot_saves_file_not_base64(monkeypatch, tmp_path):
     from openai_agents_agentsearch import _ops
+    monkeypatch.setenv("AGENTSEARCH_MODE", "paid")
     monkeypatch.setenv("AGENTSEARCH_SCREENSHOT_DIR", str(tmp_path))
     png = b"\x89PNG\r\n\x1a\nfake"
     got = {}
@@ -221,6 +222,7 @@ def test_screenshot_saves_file_not_base64(monkeypatch, tmp_path):
 
 def test_news_passes_filters(monkeypatch):
     from openai_agents_agentsearch import _ops
+    monkeypatch.setenv("AGENTSEARCH_MODE", "paid")
     got = {}
     monkeypatch.setattr(_client, "call_portal", lambda op, body, client=None: got.update(op=op, body=body) or {"results": []})
     _ops.news("base usdc", 8, freshness="week", language="en", country=None)
@@ -231,9 +233,16 @@ def test_news_and_screenshot_need_wallet(monkeypatch):
     from openai_agents_agentsearch import _ops
     for k in _client.KEY_ENV_VARS:
         monkeypatch.delenv(k, raising=False)
-    monkeypatch.setattr(_client.httpx, "Client", lambda **kw: pytest.fail("no network call expected"))
-    assert "No wallet is configured" in _ops.news("xx")
-    assert "No wallet is configured" in _ops.screenshot("https://example.com")
+    seen = {}
+
+    def handler(req):
+        seen["url"] = str(req.url)
+        return httpx.Response(200, json={"query": "xx", "results": [], "url": "https://example.com/", "screenshot": {"format": "png", "width": 1, "height": 1, "base64": "a"}})
+
+    monkeypatch.setattr(_client.httpx, "Client", lambda **kw: _REAL_CLIENT(transport=httpx.MockTransport(handler)))
+    out = _ops.news("xx")
+    assert not out.startswith("Error:"), out
+    assert seen["url"] == "https://relay.agentsearchhq.com/v1/news"
 
 
 def test_tool_list_and_schemas():
